@@ -4,23 +4,60 @@
 <meta charset="UTF-8">
 <title>识字练习</title>
 <style>
-  body { text-align: center; font-family: Arial; margin-top: 50px; }
-  input { width: 50px; padding: 5px; margin: 5px; }
-  #word { font-size: 80px; margin-top: 40px; }
+  body { text-align: center; font-family: Arial; }
+
+  #inputArea { margin-top: 40px; }
+
+  input {
+    width: 50px;
+    padding: 5px;
+    margin: 5px;
+  }
+
+  #word {
+    font-size: 100px;
+    margin-top: 100px;
+  }
+
+  button {
+    font-size: 20px;
+    margin: 10px;
+    padding: 10px 20px;
+  }
+
+  #resultArea {
+    margin-top: 50px;
+    font-size: 30px;
+  }
+
+  .charBox {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+  }
 </style>
 </head>
+
 <body>
 
-<h2>识字练习</h2>
+<div id="inputArea">
+  <h2>识字练习</h2>
+  年级 <input id="grade">
+  册 <input id="semester">
+  课 <input id="lesson">
+  <br>
+  <button onclick="start()">开始</button>
+</div>
 
-年级 <input id="grade" placeholder="1">
-册 <input id="semester" placeholder="A">
-课 <input id="lesson" placeholder="1">
+<div id="practiceArea" style="display:none;">
+  <div id="word"></div>
+  <div>
+    <button onclick="mark(true)">✔ 对</button>
+    <button onclick="mark(false)">✘ 错</button>
+  </div>
+</div>
 
-<br>
-<button onclick="start()">开始</button>
-
-<div id="word"></div>
+<div id="resultArea" style="display:none;"></div>
 
 <script src="app.js"></script>
 
