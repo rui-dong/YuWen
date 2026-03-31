@@ -3,11 +3,20 @@ let words = [];
 let index = 0;
 let results = [];
 
-// 读取数据
+// ⭐ 加载数据
 fetch("data.json")
   .then(res => res.json())
   .then(data => {
     dataObj = data.data;
+
+    // 启用按钮
+    const btn = document.getElementById("startBtn");
+    btn.disabled = false;
+    btn.innerText = "开始";
+  })
+  .catch(err => {
+    alert("数据加载失败，请检查 data.json");
+    console.error(err);
   });
 
 // 开始练习
@@ -27,7 +36,6 @@ function start() {
   index = 0;
   results = [];
 
-  // 切换界面
   document.getElementById("inputArea").style.display = "none";
   document.getElementById("practiceArea").style.display = "block";
   document.getElementById("resultArea").style.display = "none";
@@ -40,7 +48,7 @@ function showWord() {
   document.getElementById("word").innerText = words[index];
 }
 
-// 记录结果
+// 标记对/错
 function mark(correct) {
   results.push({
     char: words[index],
@@ -56,7 +64,7 @@ function mark(correct) {
   }
 }
 
-// 显示统计
+// 显示结果
 function showResults() {
   document.getElementById("practiceArea").style.display = "none";
   document.getElementById("resultArea").style.display = "block";
@@ -77,10 +85,9 @@ function showResults() {
   document.getElementById("resultArea").innerHTML = html;
 }
 
-// 回车控制
+// 回车返回
 document.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
-    // 如果在结果页 → 返回首页
     if (document.getElementById("resultArea").style.display === "block") {
       reset();
     }
