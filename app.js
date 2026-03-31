@@ -21,6 +21,7 @@ fetch("data.json")
 
 // 开始练习
 function start() {
+  console.log("dataObj:", dataObj);
   let grade = document.getElementById("grade").value.trim();
   let semester = document.getElementById("semester").value.trim().toUpperCase();
   let lesson = document.getElementById("lesson").value.trim();
