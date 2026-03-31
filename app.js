@@ -1,12 +1,13 @@
 let dataObj = {};
 let words = [];
 let index = 0;
+let results = [];
 
-// 加载数据
+// 读取数据
 fetch("data.json")
   .then(res => res.json())
   .then(data => {
-    dataObj = data;
+    dataObj = data.data;
   });
 
 // 开始练习
@@ -20,45 +21,80 @@ function start() {
     return;
   }
 
-  // 取识字表
   words = [...dataObj[grade][semester][lesson]["识字"]];
-
-  // 打乱顺序
   shuffle(words);
 
   index = 0;
+  results = [];
+
+  // 切换界面
+  document.getElementById("inputArea").style.display = "none";
+  document.getElementById("practiceArea").style.display = "block";
+  document.getElementById("resultArea").style.display = "none";
+
   showWord();
 }
 
-// 显示当前字
+// 显示字
 function showWord() {
-  if (words.length === 0) return;
-
   document.getElementById("word").innerText = words[index];
 }
 
-// 回车切换
-document.addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    nextWord();
-  }
-});
-
-function nextWord() {
-  if (words.length === 0) return;
+// 记录结果
+function mark(correct) {
+  results.push({
+    char: words[index],
+    correct: correct
+  });
 
   index++;
 
   if (index >= words.length) {
-    // 全部完成 → 重新打乱
-    shuffle(words);
-    index = 0;
+    showResults();
+  } else {
+    showWord();
   }
-
-  showWord();
 }
 
-// 洗牌算法（随机顺序核心）
+// 显示统计
+function showResults() {
+  document.getElementById("practiceArea").style.display = "none";
+  document.getElementById("resultArea").style.display = "block";
+
+  let html = "<h2>结果</h2>";
+
+  results.forEach(r => {
+    html += `
+      <div class="charBox">
+        <div>${r.char}</div>
+        <div>${r.correct ? "✔" : "✘"}</div>
+      </div>
+    `;
+  });
+
+  html += "<p>按回车返回</p>";
+
+  document.getElementById("resultArea").innerHTML = html;
+}
+
+// 回车控制
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    // 如果在结果页 → 返回首页
+    if (document.getElementById("resultArea").style.display === "block") {
+      reset();
+    }
+  }
+});
+
+// 重置
+function reset() {
+  document.getElementById("inputArea").style.display = "block";
+  document.getElementById("practiceArea").style.display = "none";
+  document.getElementById("resultArea").style.display = "none";
+}
+
+// 洗牌
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
