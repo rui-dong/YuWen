@@ -59,7 +59,7 @@
             if (!char) return;
 
             try {
-                const res = await fetch('data.json');
+                const res = await fetch('lookup.json');
                 const data = await res.json();
                 
                 // 筛选出匹配的汉字行
