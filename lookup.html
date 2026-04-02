@@ -64,7 +64,7 @@
 
             try {
                 // 强制加一个时间戳避免 GitHub 缓存
-                const res = await fetch('data.json?v=' + Date.now());
+                const res = await fetch('lookup.json?v=' + Date.now());
                 const data = await res.json();
                 
                 // 将输入字符串拆分为单个汉字的数组
