@@ -4,7 +4,7 @@ let index = 0;
 let results = [];
 
 // ⭐ 加载数据
-fetch("data.json")
+fetch("recog.json")
   .then(res => res.json())
   .then(data => {
     dataObj = data.data;
