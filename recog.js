@@ -15,7 +15,7 @@ fetch("recog.json")
     btn.innerText = "开始";
   })
   .catch(err => {
-    alert("数据加载失败，请检查 data.json");
+    alert("数据加载失败，请检查 recog.json");
     console.error(err);
   });
 
