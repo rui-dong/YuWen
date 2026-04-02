@@ -2,26 +2,27 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>汉字数据转换查询</title>
+    <title>汉字批量查询</title>
     <style>
         body { font-family: "Microsoft YaHei", sans-serif; padding: 20px; background: #f9f9f9; }
         .search-bar { margin-bottom: 20px; display: flex; gap: 10px; }
-        input { padding: 8px; width: 120px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 8px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        input { padding: 8px; width: 200px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+        button { padding: 8px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; }
         button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        th { background-color: #f4f4f4; color: #333; }
-        tr:hover { background-color: #fcfcfc; }
-        #msg { margin-top: 10px; color: #666; font-size: 14px; }
+        th { background-color: #f4f4f4; }
+        .char-tag { background: #e7f3ff; font-weight: bold; color: #007bff; } /* 给查到的汉字加点颜色 */
+        #msg { margin-top: 10px; color: #666; }
     </style>
 </head>
 <body>
 
-    <h2>汉字信息检索系统</h2>
+    <h2>汉字信息批量检索</h2>
     
     <div class="search-bar">
-        <input type="text" id="ipt" placeholder="输入汉字查询">
+        <!-- 移除 maxlength 限制以支持多个字 -->
+        <input type="text" id="ipt" placeholder="输入一个或多个汉字" onkeypress="if(event.keyCode==13) doQuery()">
         <button onclick="doQuery()">查询</button>
     </div>
 
@@ -32,8 +33,8 @@
             <tr>
                 <th>汉字</th>
                 <th>年级</th>
-                <th>册数</th>
-                <th>课程类别</th>
+                <th>册别</th>
+                <th>课程类型</th>
                 <th>课数</th>
                 <th>类别</th>
             </tr>
@@ -42,7 +43,6 @@
     </table>
 
     <script>
-        // 转换配置表
         const convert = {
             x1: { 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六" },
             x2: { 1: "上", 2: "下" },
@@ -51,43 +51,56 @@
         };
 
         async function doQuery() {
-            const char = document.getElementById('ipt').value.trim();
+            const inputVal = document.getElementById('ipt').value.trim();
             const box = document.getElementById('box');
             const tbl = document.getElementById('tbl');
             const msg = document.getElementById('msg');
 
-            if (!char) return;
+            if (!inputVal) return;
 
             try {
-                const res = await fetch('lookup.json');
+                // 强制加一个时间戳避免 GitHub 缓存
+                const res = await fetch('data.json?v=' + Date.now());
                 const data = await res.json();
                 
-                // 筛选出匹配的汉字行
-                const results = data.filter(row => row[0] === char);
+                // 将输入字符串拆分为单个汉字的数组
+                // 例如 "学习" -> ["学", "习"]
+                const charsToSearch = inputVal.split("");
 
                 box.innerHTML = "";
-                if (results.length > 0) {
-                    results.forEach(row => {
-                        // row 结构: [汉字, x1, x2, x3, x4, x5]
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${row[0]}</td>
-                            <td>${convert.x1[row[1]] || row[1]}</td>
-                            <td>${convert.x2[row[2]] || row[2]}</td>
-                            <td>${convert.x3[row[3]] || row[3]}</td>
-                            <td>${row[4]}</td>
-                            <td>${convert.x5[row[5]] || row[5]}</td>
-                        `;
-                        box.appendChild(tr);
-                    });
+                let foundCount = 0;
+
+                // 循环处理每个汉字
+                charsToSearch.forEach(char => {
+                    const results = data.filter(row => row[0] === char);
+                    
+                    if (results.length > 0) {
+                        foundCount += results.length;
+                        results.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="char-tag">${row[0]}</td>
+                                <td>${convert.x1[row[1]] || row[1]}</td>
+                                <td>${convert.x2[row[2]] || row[2]}</td>
+                                <td>${convert.x3[row[3]] || row[3]}</td>
+                                <td>${row[4]}</td>
+                                <td>${convert.x5[row[5]] || row[5]}</td>
+                            `;
+                            box.appendChild(tr);
+                        });
+                    }
+                });
+
+                if (foundCount > 0) {
                     tbl.style.display = "table";
-                    msg.innerText = `为您找到 ${results.length} 条记录`;
+                    msg.innerText = `查询完毕，共显示 ${foundCount} 条结果`;
                 } else {
                     tbl.style.display = "none";
-                    msg.innerText = "抱歉，未找到该汉字的信息";
+                    msg.innerText = "抱歉，未找到这些汉字的信息";
                 }
             } catch (err) {
-                msg.innerText = "数据读取失败，请检查 lookup.json 是否存在";
+                msg.innerText = "数据读取失败，请检查 data.json";
+                console.error(err);
             }
         }
     </script>
