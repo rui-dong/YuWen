@@ -6,6 +6,10 @@
 <style>
   body { text-align: center; font-family: Arial; }
 
+<button onclick="goHome()" style="position:fixed; top:20px; left:20px;">
+  ⬅ 返回
+</button>
+
   #inputArea { margin-top: 40px; }
 
   input {
@@ -61,5 +65,10 @@
 <div id="resultArea" style="display:none;"></div>
 
 <script src="recog.js"></script>
+<script>
+function goHome() {
+  window.location.href = "index.html";
+}
+</script>
 </body>
 </html>
