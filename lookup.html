@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>汉字数据转换查询</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; padding: 20px; background: #f9f9f9; }
+        .search-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+        input { padding: 8px; width: 120px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background-color: #f4f4f4; color: #333; }
+        tr:hover { background-color: #fcfcfc; }
+        #msg { margin-top: 10px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2>汉字信息检索系统</h2>
+    
+    <div class="search-bar">
+        <input type="text" id="ipt" placeholder="输入汉字查询">
+        <button onclick="doQuery()">查询</button>
+    </div>
+
+    <div id="msg"></div>
+    
+    <table id="tbl" style="display:none">
+        <thead>
+            <tr>
+                <th>汉字</th>
+                <th>年级 (X1)</th>
+                <th>上下册 (X2)</th>
+                <th>类型 (X3)</th>
+                <th>课数 (X4)</th>
+                <th>表格 (X5)</th>
+            </tr>
+        </thead>
+        <tbody id="box"></tbody>
+    </table>
+
+    <script>
+        // 转换配置表
+        const convert = {
+            x1: { 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六" },
+            x2: { 1: "上", 2: "下" },
+            x3: { "C": "识字", "L": "课文", "E": "语文园地" },
+            x5: { "R": "识字表", "W": "写字表" }
+        };
+
+        async function doQuery() {
+            const char = document.getElementById('ipt').value.trim();
+            const box = document.getElementById('box');
+            const tbl = document.getElementById('tbl');
+            const msg = document.getElementById('msg');
+
+            if (!char) return;
+
+            try {
+                const res = await fetch('data.json');
+                const data = await res.json();
+                
+                // 筛选出匹配的汉字行
+                const results = data.filter(row => row[0] === char);
+
+                box.innerHTML = "";
+                if (results.length > 0) {
+                    results.forEach(row => {
+                        // row 结构: [汉字, x1, x2, x3, x4, x5]
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row[0]}</td>
+                            <td>${convert.x1[row[1]] || row[1]}</td>
+                            <td>${convert.x2[row[2]] || row[2]}</td>
+                            <td>${convert.x3[row[3]] || row[3]}</td>
+                            <td>${row[4]}</td>
+                            <td>${convert.x5[row[5]] || row[5]}</td>
+                        `;
+                        box.appendChild(tr);
+                    });
+                    tbl.style.display = "table";
+                    msg.innerText = `为您找到 ${results.length} 条记录`;
+                } else {
+                    tbl.style.display = "none";
+                    msg.innerText = "抱歉，未找到该汉字的信息";
+                }
+            } catch (err) {
+                msg.innerText = "数据读取失败，请检查 data.json 是否存在";
+            }
+        }
+    </script>
+</body>
+</html>
