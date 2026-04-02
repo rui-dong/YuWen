@@ -5,7 +5,7 @@ let results = [];
 
 // ⭐ 加载数据
 fetch("recog.json")
-  .then(res => recog.json())
+  .then(res => res.json())
   .then(data => {
     dataObj = data.data;
 
