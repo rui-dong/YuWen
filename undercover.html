@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谁是卧底 - 智能裁判助手</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --disabled-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            margin-bottom: 28px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Player Grid */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 12px;
+            margin: 24px 0;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .player-btn {
+            padding: 16px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .player-btn:not(:disabled):hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .player-btn:disabled {
+            background: var(--disabled-color);
+            color: #64748b;
+            border-color: transparent;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* Word Cards */
+        .word-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 16px;
+            padding: 32px 16px;
+            margin: 24px 0;
+        }
+
+        .word-title {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        .word-display {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 2px;
+        }
+
+        /* Result Card */
+        .result-box {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--text-sub);
+        }
+
+        .result-val {
+            font-weight: 700;
+        }
+
+        .badge-spy { color: #f43f5e; }
+        .badge-civilian { color: #10b981; }
+
+        /* Modal / Database Panel */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .word-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 6px;
+            border-radius: 8px;
+        }
+
+        .del-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-weight: bold;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. 欢迎与设置页面 -->
+    <div id="screen-welcome" class="screen active">
+        <h1>谁是卧底</h1>
+        <p class="subtitle">法官辅助系统 · 真随机抽词</p>
+
+        <div class="form-group">
+            <label for="player-count">请输入游戏人数 N (3 - 20 人):</label>
+            <input type="number" id="player-count" min="3" max="20" value="6">
+        </div>
+
+        <button class="btn" onclick="startGame()">开始游戏</button>
+        <button class="btn btn-secondary" onclick="openDbModal()">词库管理 (<span id="db-count">0</span>组)</button>
+    </div>
+
+    <!-- 2. 准备领词页面 (防作弊中转) -->
+    <div id="screen-claim-ready" class="screen">
+        <h1 id="claim-ready-title">请第 1 人领取词语</h1>
+        <p class="subtitle">请将手机移交给对应编号的玩家</p>
+        <div style="font-size: 4rem; margin: 20px 0;">📱</div>
+        <button class="btn" onclick="showWord()">点击查看游戏词</button>
+    </div>
+
+    <!-- 3. 显示词语页面 -->
+    <div id="screen-claim-word" class="screen">
+        <h1 id="claim-word-title">玩家 1 的词语</h1>
+        <p class="subtitle">请记住你的词语，切勿透露给他人</p>
+        <div class="word-card">
+            <div class="word-title">你的专属词语</div>
+            <div class="word-display" id="assigned-word">---</div>
+        </div>
+        <button class="btn" onclick="nextPlayerClaim()">记住了，传给下一人</button>
+    </div>
+
+    <!-- 4. 等待淘汰/投票页面 -->
+    <div id="screen-gameplay" class="screen">
+        <h1>游戏进行中</h1>
+        <p class="subtitle">请本轮被投票淘汰的玩家点击自己的编号：</p>
+
+        <div class="player-grid" id="player-grid"></div>
+
+        <p id="gameplay-tip" style="color: var(--text-sub); font-size: 0.9rem; min-height: 1.5em;"></p>
+    </div>
+
+    <!-- 5. 结算页面 -->
+    <div id="screen-result" class="screen">
+        <h1 id="result-title">游戏结束</h1>
+        <p class="subtitle" id="result-subtitle">卧底已被淘汰！</p>
+
+        <div class="result-box">
+            <div class="result-item">
+                <span class="result-label">平民词语：</span>
+                <span class="result-val badge-civilian" id="res-civilian-word">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">卧底词语：</span>
+                <span class="result-val badge-spy" id="res-spy-word">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">卧底玩家：</span>
+                <span class="result-val badge-spy" id="res-spy-player">-</span>
+            </div>
+        </div>
+
+        <button class="btn" onclick="resetToWelcome()">再来一局</button>
+    </div>
+</div>
+
+<!-- 词库管理弹窗 -->
+<div class="modal" id="db-modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 16px;">词库管理</h2>
+        <div class="form-group" style="display: flex; gap: 8px;">
+            <input type="text" id="new-w1" placeholder="词语 A">
+            <input type="text" id="new-w2" placeholder="词语 B">
+            <button class="btn" style="width: auto; margin: 0; white-space: nowrap;" onclick="addWordPair()">添加</button>
+        </div>
+        <div id="word-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;"></div>
+        <button class="btn btn-secondary" onclick="closeDbModal()">关闭</button>
+    </div>
+</div>
+
+<script>
+    // 默认内置词库 (30+ 经典词对)
+    const DEFAULT_WORDS = [
+        ["麦当劳", "肯德基"], ["牛奶", "豆浆"], ["蜘蛛侠", "蜘蛛精"],
+        ["情侣", "夫妻"], ["辣椒", "芥末"], ["猪八戒", "沙和尚"],
+        ["富二代", "高富帅"], ["包女婿", "买女婿"], ["成龙", "周星驰"],
+        ["大白菜", "小白菜"], ["牛肉干", "猪肉铺"], ["新年", "跨年"],
+        ["口红", "唇膏"], ["微信", "支付宝"], ["眉毛", "胡子"],
+        ["吉他", "尤克里里"], ["水盆", "水桶"], ["芒果", "榴莲"],
+        ["小品", "相声"], ["班主任", "辅导员"], ["洗发露", "护发素"],
+        ["海豚", "海狮"], ["乒乓球", "羽毛球"], ["高铁", "火车"],
+        ["咖啡", "奶茶"], ["果汁", "可乐"], ["结婚", "订婚"],
+        ["公关", "市场"], ["烤肉", "火锅"], ["降落伞", "热气球"]
+    ];
+
+    // 游戏状态
+    let wordBank = [];
+    let totalPlayers = 0;
+    let currentPlayer = 1;
+    let spyPlayerId = 0;
+    let civilianWord = "";
+    let spyWord = "";
+    let eliminatedSet = new Set();
+
+    // 页面初始化
+    window.addEventListener('DOMContentLoaded', () => {
+        loadWordBank();
+        setupHistoryControl();
+    });
+
+    // 防止用户使用浏览器“后退”按钮作弊
+    function setupHistoryControl() {
+        history.pushState({ page: 'welcome' }, '', '');
+        window.addEventListener('popstate', (e) => {
+            history.pushState({ page: 'active' }, '', '');
+        });
+    }
+
+    // 高质量密码学随机整数生成函数 [min, max]
+    function getCryptoRandomInt(min, max) {
+        const range = max - min + 1;
+        const array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        return min + (array[0] % range);
+    }
+
+    // 加载/重置词库
+    function loadWordBank() {
+        const localData = localStorage.getItem('undercover_words');
+        if (localData) {
+            try {
+                wordBank = JSON.parse(localData);
+            } catch (e) {
+                wordBank = [...DEFAULT_WORDS];
+            }
+        } else {
+            wordBank = [...DEFAULT_WORDS];
+            saveWordBank();
+        }
+        document.getElementById('db-count').innerText = wordBank.length;
+    }
+
+    function saveWordBank() {
+        localStorage.setItem('undercover_words', JSON.stringify(wordBank));
+        document.getElementById('db-count').innerText = wordBank.length;
+    }
+
+    // 切换界面
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // 开始游戏逻辑
+    function startGame() {
+        const inputVal = parseInt(document.getElementById('player-count').value);
+        if (isNaN(inputVal) || inputVal < 3 || inputVal > 20) {
+            alert("请输入 3 到 20 之间的玩家人数！");
+            return;
+        }
+
+        if (wordBank.length === 0) {
+            alert("词库为空，请先在词库管理中添加词语！");
+            return;
+        }
+
+        totalPlayers = inputVal;
+        currentPlayer = 1;
+        eliminatedSet.clear();
+
+        // 1. 随机选出一组词
+        const pairIndex = getCryptoRandomInt(0, wordBank.length - 1);
+        const selectedPair = wordBank[pairIndex];
+
+        // 2. 随机交换平民词与卧底词
+        if (getCryptoRandomInt(0, 1) === 0) {
+            civilianWord = selectedPair[0];
+            spyWord = selectedPair[1];
+        } else {
+            civilianWord = selectedPair[1];
+            spyWord = selectedPair[0];
+        }
+
+        // 3. 高度真随机抽取卧底玩家 (1 ~ N)
+        spyPlayerId = getCryptoRandomInt(1, totalPlayers);
+
+        // 进入发牌准备阶段
+        updateClaimReadyScreen();
+        showScreen('screen-claim-ready');
+    }
+
+    function updateClaimReadyScreen() {
+        document.getElementById('claim-ready-title').innerText = `请第 ${currentPlayer} 人领取游戏词`;
+    }
+
+    function showWord() {
+        document.getElementById('claim-word-title').innerText = `玩家 ${currentPlayer} 的词语`;
+        const wordDisplay = document.getElementById('assigned-word');
+
+        if (currentPlayer === spyPlayerId) {
+            wordDisplay.innerText = spyWord;
+        } else {
+            wordDisplay.innerText = civilianWord;
+        }
+
+        showScreen('screen-claim-word');
+    }
+
+    function nextPlayerClaim() {
+        if (currentPlayer < totalPlayers) {
+            currentPlayer++;
+            updateClaimReadyScreen();
+            showScreen('screen-claim-ready');
+        } else {
+            // 所有玩家发牌完毕，进入淘汰/投票阶段
+            renderGameplayGrid();
+            showScreen('screen-gameplay');
+        }
+    }
+
+    // 渲染淘汰界面按钮列表
+    function renderGameplayGrid() {
+        const grid = document.getElementById('player-grid');
+        grid.innerHTML = '';
+        document.getElementById('gameplay-tip').innerText = '';
+
+        for (let i = 1; i <= totalPlayers; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'player-btn';
+            btn.innerText = `${i} 号`;
+            btn.id = `player-btn-${i}`;
+            
+            if (eliminatedSet.has(i)) {
+                btn.disabled = true;
+            } else {
+                btn.onclick = () => eliminatePlayer(i);
+            }
+
+            grid.appendChild(btn);
+        }
+    }
+
+    // 处理玩家淘汰点击
+    function eliminatePlayer(playerId) {
+        if (!confirm(`确定淘汰 ${playerId} 号玩家吗？`)) return;
+
+        eliminatedSet.add(playerId);
+        
+        if (playerId === spyPlayerId) {
+            // 卧底被淘汰，平民胜利！
+            showSettlement(true);
+        } else {
+            // 误杀平民
+            const remainingCount = totalPlayers - eliminatedSet.size;
+            // 如果剩余人数等于2人（1卧底1平民），卧底胜
+            if (remainingCount <= 2) {
+                showSettlement(false);
+            } else {
+                document.getElementById('gameplay-tip').innerText = `玩家 ${playerId} 号被淘汰，游戏继续！`;
+                renderGameplayGrid();
+            }
+        }
+    }
+
+    // 结算画面
+    function showSettlement(spyEliminated) {
+        const title = document.getElementById('result-title');
+        const subtitle = document.getElementById('result-subtitle');
+
+        if (spyEliminated) {
+            title.innerText = "🎉 游戏结束";
+            subtitle.innerText = "卧底已被淘汰，平民获得胜利！";
+            subtitle.style.color = "#10b981";
+        } else {
+            title.innerText = "😈 游戏结束";
+            subtitle.innerText = "平民人数不足，卧底成功逆袭获胜！";
+            subtitle.style.color = "#f43f5e";
+        }
+
+        document.getElementById('res-civilian-word').innerText = civilianWord;
+        document.getElementById('res-spy-word').innerText = spyWord;
+        document.getElementById('res-spy-player').innerText = `${spyPlayerId} 号`;
+
+        showScreen('screen-result');
+    }
+
+    function resetToWelcome() {
+        showScreen('screen-welcome');
+    }
+
+    /* 词库管理 Modal 逻辑 */
+    function openDbModal() {
+        renderWordList();
+        document.getElementById('db-modal').style.display = 'flex';
+    }
+
+    function closeDbModal() {
+        document.getElementById('db-modal').style.display = 'none';
+    }
+
+    function renderWordList() {
+        const container = document.getElementById('word-list');
+        container.innerHTML = '';
+        wordBank.forEach((pair, idx) => {
+            const item = document.createElement('div');
+            item.className = 'word-list-item';
+            item.innerHTML = `
+                <span>${pair[0]} - ${pair[1]}</span>
+                <button class="del-btn" onclick="removeWordPair(${idx})">删除</button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function addWordPair() {
+        const w1 = document.getElementById('new-w1').value.trim();
+        const w2 = document.getElementById('new-w2').value.trim();
+        if (!w1 || !w2) {
+            alert('请输入完整的两个词语！');
+            return;
+        }
+        wordBank.unshift([w1, w2]);
+        saveWordBank();
+        renderWordList();
+        document.getElementById('new-w1').value = '';
+        document.getElementById('new-w2').value = '';
+    }
+
+    function removeWordPair(idx) {
+        wordBank.splice(idx, 1);
+        saveWordBank();
+        renderWordList();
+    }
+</script>
+</body>
+</html>
